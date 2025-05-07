@@ -14,6 +14,7 @@ import {
   assessValue,
   getReferenceRangesForConcept,
   interpretBloodPressure,
+  useConceptUnits,
   useVitalsAndBiometrics,
   useVitalsConceptMetadata,
 } from '../common';
@@ -34,8 +35,9 @@ interface VitalsHeaderProps {
 const VitalsHeader: React.FC<VitalsHeaderProps> = ({ patientUuid, hideLinks = false }) => {
   const { t } = useTranslation();
   const config = useConfig<ConfigObject>();
-  const { data: conceptUnits, conceptMetadata } = useVitalsConceptMetadata();
+  const { conceptUnits } = useConceptUnits();
   const { data: vitals, isLoading, isValidating } = useVitalsAndBiometrics(patientUuid, 'both');
+  const { conceptRanges } = useVitalsConceptMetadata(patientUuid);
   const latestVitals = vitals?.[0];
   const [showDetailsPanel, setShowDetailsPanel] = useState(false);
   const toggleDetailsPanel = () => setShowDetailsPanel(!showDetailsPanel);
@@ -59,7 +61,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({ patientUuid, hideLinks = fa
     );
   }
 
-  if (latestVitals && Object.keys(latestVitals)?.length && conceptMetadata?.length) {
+  if (latestVitals && Object.keys(latestVitals)?.length && conceptRanges?.length) {
     const hasActiveVisit = Boolean(currentVisit?.uuid);
     const now = dayjs();
     const vitalsTakenTimeAgo = dayjs.duration(now.diff(latestVitals?.date));
@@ -156,7 +158,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({ patientUuid, hideLinks = fa
                 latestVitals?.systolic,
                 latestVitals?.diastolic,
                 config?.concepts,
-                conceptMetadata,
+                conceptRanges,
               )}
               unitName={t('bp', 'BP')}
               unitSymbol={(latestVitals?.systolic && conceptUnits.get(config.concepts.systolicBloodPressureUuid)) ?? ''}
@@ -165,7 +167,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({ patientUuid, hideLinks = fa
             <VitalsHeaderItem
               interpretation={assessValue(
                 latestVitals?.pulse,
-                getReferenceRangesForConcept(config.concepts.pulseUuid, conceptMetadata),
+                getReferenceRangesForConcept(config.concepts.pulseUuid, conceptRanges),
               )}
               unitName={t('heartRate', 'Heart rate')}
               unitSymbol={(latestVitals?.pulse && conceptUnits.get(config.concepts.pulseUuid)) ?? ''}
@@ -174,7 +176,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({ patientUuid, hideLinks = fa
             <VitalsHeaderItem
               interpretation={assessValue(
                 latestVitals?.respiratoryRate,
-                getReferenceRangesForConcept(config.concepts.respiratoryRateUuid, conceptMetadata),
+                getReferenceRangesForConcept(config.concepts.respiratoryRateUuid, conceptRanges),
               )}
               unitName={t('respiratoryRate', 'R. rate')}
               unitSymbol={
@@ -185,7 +187,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({ patientUuid, hideLinks = fa
             <VitalsHeaderItem
               interpretation={assessValue(
                 latestVitals?.spo2,
-                getReferenceRangesForConcept(config.concepts.oxygenSaturationUuid, conceptMetadata),
+                getReferenceRangesForConcept(config.concepts.oxygenSaturationUuid, conceptRanges),
               )}
               unitName={t('spo2', 'SpO2')}
               unitSymbol={(latestVitals?.spo2 && conceptUnits.get(config.concepts.oxygenSaturationUuid)) ?? ''}
@@ -194,7 +196,7 @@ const VitalsHeader: React.FC<VitalsHeaderProps> = ({ patientUuid, hideLinks = fa
             <VitalsHeaderItem
               interpretation={assessValue(
                 latestVitals?.temperature,
-                getReferenceRangesForConcept(config.concepts.temperatureUuid, conceptMetadata),
+                getReferenceRangesForConcept(config.concepts.temperatureUuid, conceptRanges),
               )}
               unitName={t('temperatureAbbreviated', 'Temp')}
               unitSymbol={(latestVitals?.temperature && conceptUnits.get(config.concepts.temperatureUuid)) ?? ''}
